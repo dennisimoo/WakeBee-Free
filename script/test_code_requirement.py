@@ -30,12 +30,15 @@ class CodeRequirementTests(unittest.TestCase):
             subprocess.run(['codesign', '--force', '--sign', '-', str(other)], check=True)
             self.assertNotEqual(subprocess.run(['codesign', '--verify', '-R', '=' + requirement, str(other)],
                                                capture_output=True).returncode, 0)
-            # Modifying the pinned executable invalidates its signature.
-            content = bytearray(binary.read_bytes())
-            content[-1] ^= 1
-            binary.write_bytes(content)
-            self.assertNotEqual(subprocess.run(['codesign', '--verify', '--all-architectures',
-                                                '-R', '=' + requirement, str(binary)], capture_output=True).returncode, 0)
+            # Modify a signed page, rather than trailing signature padding.
+            thin = directory / 'thin'
+            subprocess.run(['lipo', str(binary), '-thin', 'arm64', '-output', str(thin)], check=True)
+            subprocess.run(['codesign', '--verify', '--strict', '-R', '=' + requirement, str(thin)], check=True)
+            content = bytearray(thin.read_bytes())
+            content[4096] ^= 1
+            thin.write_bytes(content)
+            self.assertNotEqual(subprocess.run(['codesign', '--verify', '--strict',
+                                                '-R', '=' + requirement, str(thin)], capture_output=True).returncode, 0)
 
 
 if __name__ == '__main__':

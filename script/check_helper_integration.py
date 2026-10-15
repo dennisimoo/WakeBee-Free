@@ -40,6 +40,8 @@ def main():
             run('codesign', '--force', '--sign', '-', '--options', 'runtime,kill', app)
 
         compile_probe()
+        requirement = subprocess.check_output([str(executable), '--code-requirement'], text=True).strip()
+        run('codesign', '--verify', '--strict', '-R', '=' + requirement, app)
         try:
             run('sudo', '/bin/bash', manager, 'install', app, uid)
             installed = plistlib.loads((INSTALLED / 'client.plist').read_bytes())

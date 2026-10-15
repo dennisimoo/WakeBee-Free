@@ -4,6 +4,11 @@ import Foundation
 
 @main struct HelperProbe {
     static func main() {
+        if Array(CommandLine.arguments.dropFirst()) == ["--code-requirement"] {
+            guard let requirement = HelperIdentity.currentCodeRequirement else { exit(4) }
+            print(requirement)
+            return
+        }
         #if REJECTED
         print("Unapproved build")
         #endif
