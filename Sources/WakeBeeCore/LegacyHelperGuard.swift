@@ -13,9 +13,16 @@ public enum LegacyHelperGuard {
     }
 
     public static func ensureReady(checkRecovery: Bool = true) throws {
+        for (label, journal) in [(service, recoveryPath),
+                ("app.wakebee.helper", "/private/var/db/app.wakebee.helper/recovery.json")] {
+            try checkService(label, journal: journal, checkRecovery: checkRecovery)
+        }
+    }
+
+    private static func checkService(_ label: String, journal: String, checkRecovery: Bool) throws {
         let process = Process(), finished = DispatchSemaphore(value: 0)
         process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-        process.arguments = ["print", "system/\(service)"]
+        process.arguments = ["print", "system/\(label)"]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
         process.terminationHandler = { _ in finished.signal() }
@@ -26,7 +33,7 @@ public enum LegacyHelperGuard {
             throw Failure.cannotCheck
         }
         try checkResult(exitStatus: process.terminationStatus,
-                        hasRecovery: checkRecovery && FileManager.default.fileExists(atPath: recoveryPath))
+                        hasRecovery: checkRecovery && FileManager.default.fileExists(atPath: journal))
     }
 
     public enum Failure: LocalizedError {

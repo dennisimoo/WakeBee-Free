@@ -28,12 +28,12 @@ struct ClosedLidControl: View {
                         model.setupClosedLid()
                     }
                     .controlSize(.small)
-                    .disabled(model.closedLid.isBusy || !model.license.isUnlocked)
+                    .disabled(model.closedLid.isBusy)
                 } else if model.closedLid.isRegistered {
                     Toggle("Keep awake with lid closed", isOn: Binding(
                         get: { model.closedLid.isEnabled }, set: model.setClosedLid))
                         .toggleStyle(AwakeGlassToggleStyle(showsLabel: false))
-                        .disabled(model.closedLid.isBusy || (!model.license.isUnlocked && !model.closedLid.isEnabled))
+                        .disabled(model.closedLid.isBusy)
                 }
             }
 
@@ -75,7 +75,7 @@ struct ClosedLidControl: View {
         if model.closedLid.isBusy { return "Keep the lid open for a moment while WakeBee gets ready." }
         if model.closedLid.canRepair { return "Keep the lid open, then try setup again." }
         if let issue = model.closedLid.issueMessage { return issue }
-        if !model.closedLid.isRegistered { return model.closedLid.signedBuild ? "Set up once to keep your Mac awake with the lid closed." : "Use the signed version of WakeBee to set up this feature." }
+        if !model.closedLid.isRegistered { return model.closedLid.signedBuild ? "Set up once to keep your Mac awake with the lid closed." : "Rebuild WakeBee Free to restore its helper signature information." }
         if model.closedLid.isEnabled && model.session.isActive {
             return "Keep the lid open until this says Ready to close the lid."
         }

@@ -23,7 +23,6 @@ struct SettingsView: View {
             Picker("Settings section", selection: $model.settingsTab) {
                 Text("General").tag(SettingsTab.general)
                 Text("Closed Lid").tag(SettingsTab.closedLid)
-                Text("License").tag(SettingsTab.license)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -44,11 +43,6 @@ struct SettingsView: View {
                 .modifier(SettingsPageVisibility(isSelected: model.settingsTab == .general))
             ClosedLidSettingsView(model: model)
                 .modifier(SettingsPageVisibility(isSelected: model.settingsTab == .closedLid))
-            ScrollView {
-                LicenseView(license: model.license, protectionActive: model.session.isActive)
-                    .frame(maxWidth: .infinity)
-            }
-            .modifier(SettingsPageVisibility(isSelected: model.settingsTab == .license))
         }
     }
 

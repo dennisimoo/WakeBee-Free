@@ -25,9 +25,8 @@ struct GeneralSettingsView: View {
                     .help("Keeps the display awake during an active session.")
             }
             SessionPowerSettings(preferences: preferences, closedLidEnabled: model.closedLid.isEnabled || model.closedLid.isBusy)
-            UpdateSettingsView(model: model)
             HStack {
-                Link("WakeBee", destination: URL(string: "https://www.wakebee.app")!)
+                Link("WakeBee Free · Updates & source", destination: URL(string: "https://github.com/dennisimoo/WakeBee-Free/releases")!)
                 Spacer()
                 Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—")
             }

@@ -13,7 +13,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         menuBar = MenuBarController(model: model)
         NSApp.mainMenu = ApplicationMenu.make(target: self, settingsAction: #selector(openSettings))
-        model.updates.start()
         sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.willSleepNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -47,15 +46,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func openSettings() {
         model.showSettings(.general)
         menuBar?.show()
-    }
-
-    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        // Recheck at the actual termination boundary, including races with
-        // helper setup or an outstanding sleep-restoration operation.
-        if model.updates.isInstalling, model.updateSafetyPolicy.blockingReason != nil {
-            return .terminateCancel
-        }
-        return .terminateNow
     }
 
     func applicationWillTerminate(_ notification: Notification) {

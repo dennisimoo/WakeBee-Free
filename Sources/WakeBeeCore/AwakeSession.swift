@@ -17,7 +17,7 @@ public struct AwakeSession: Equatable, Sendable {
 
 public enum SessionEndReason: Equatable, Sendable {
     case stopped, completed, systemSleep
-    case lowBattery(Int), powerRequired, powerUnknown, licenseExpired
+    case lowBattery(Int), powerRequired, powerUnknown
 
     public var description: String {
         switch self {
@@ -27,7 +27,6 @@ public enum SessionEndReason: Equatable, Sendable {
         case .lowBattery(let cutoff): "Session ended at the \(cutoff)% battery cutoff."
         case .powerRequired: "Plug in your charger to continue, or allow battery use in Settings."
         case .powerUnknown: "Could not verify battery or power status. Session protection is off."
-        case .licenseExpired: "Verify your license to start another session."
         }
     }
 }

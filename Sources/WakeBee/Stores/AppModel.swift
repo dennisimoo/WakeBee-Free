@@ -5,11 +5,9 @@ import Observation
 @MainActor @Observable
 final class AppModel {
     let preferences: Preferences
-    let license: LicenseStore
     let session: SessionController
     let closedLid = ClosedLidService()
     let loginItem = LoginItemService()
-    let updates = UpdateService()
     var durationDraft: DurationDraft
     var sessionMode = SessionMode.duration
     var sessionEndDate = Date.now.addingTimeInterval(30 * 60)
@@ -20,22 +18,12 @@ final class AppModel {
     @ObservationIgnored private var sessionMonitor: SessionMonitor?
 
     init() {
-        let license = LicenseStore(storage: MigratingLicenseStorage())
-        self.license = license
         let preferences = Preferences()
         self.preferences = preferences
         self.durationDraft = DurationDraft(totalMinutes: preferences.initialMinutes)
         let session = SessionController(power: PowerAssertionService(),
                                         keepDisplayAwake: preferences.keepDisplayAwake)
-        session.setLicenseAccess(license.isUnlocked)
         self.session = session
-        updates.safetyPolicy = { [weak self] in
-            guard let self else {
-                return UpdateSafetyPolicy(sessionActive: true, helperBusy: false, protectionActive: false,
-                                          helperRegistered: false, sleepDisabled: nil)
-            }
-            return self.updateSafetyPolicy
-        }
         self.sessionMonitor = SessionMonitor(session: session, beforeRefresh: { [weak self] in
             self?.synchronizeSafeguards()
         }) { [weak self] hasDemand in
@@ -50,7 +38,7 @@ final class AppModel {
     }
 
     func start() {
-        guard updates.allowsStartingSession, !session.isActive, let duration = requestedSession else { return }
+        guard !session.isActive, let duration = requestedSession else { return }
         synchronizeSafeguards()
         session.updatePowerSafety(policy: preferences.sessionPowerPolicy, state: SystemPowerState.snapshot)
         if session.start(duration) {
@@ -77,13 +65,10 @@ final class AppModel {
     }
 
     func setupClosedLid() {
-        guard license.isUnlocked, updates.allowsStartingSession else { return }
         closedLid.enableAfterSetup()
     }
 
     func setClosedLid(_ enabled: Bool) {
-        guard !enabled || updates.allowsStartingSession else { return }
-        guard !enabled || license.isUnlocked else { return }
         closedLid.setEnabled(enabled)
         sessionMonitor?.refresh()
     }
@@ -112,9 +97,6 @@ final class AppModel {
 
     private func synchronizeSafeguards() {
         let wasActive = session.isActive
-        license.refreshIfNeeded()
-        session.setLicenseAccess(license.isUnlocked)
-        // Idle monitoring still refreshes license access, but does not poll IOKit.
         if session.isActive {
             session.updatePowerSafety(policy: preferences.sessionPowerPolicy, state: SystemPowerState.snapshot)
         }
@@ -126,19 +108,9 @@ final class AppModel {
         closedLid.setEnabled(false)
         session.end()
     }
-
-    var canCheckForUpdates: Bool {
-        updates.canCheckForUpdates && !session.isActive && !closedLid.isActive && !closedLid.isBusy
-    }
-
-    var updateSafetyPolicy: UpdateSafetyPolicy {
-        UpdateSafetyPolicy(sessionActive: session.isActive, helperBusy: closedLid.isBusy,
-                           protectionActive: closedLid.isActive, helperRegistered: closedLid.isRegistered,
-                           sleepDisabled: closedLid.isRegistered ? try? SystemSleepState.readDisabled() : nil)
-    }
 }
 
-enum SettingsTab: Hashable { case general, closedLid, license }
+enum SettingsTab: Hashable { case general, closedLid }
 enum SessionMode: String, CaseIterable, Identifiable {
     case duration, untilTime, untilStopped
     var id: Self { self }

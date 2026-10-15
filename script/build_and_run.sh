@@ -3,7 +3,7 @@ set -euo pipefail
 
 MODE="${1:-run}"
 APP_NAME="WakeBee"
-BUNDLE_ID="app.wakebee.WakeBee"
+BUNDLE_ID="io.github.dennisimoo.WakeBeeFree"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DESTINATION="${WAKEBEE_DESTINATION:-$ROOT_DIR/dist/$APP_NAME.app}"
 CONFIGURATION="${WAKEBEE_BUILD_CONFIGURATION:-debug}"
@@ -48,10 +48,6 @@ BUILD_ARGS=(--disable-sandbox --configuration "$CONFIGURATION")
 if [[ "${WAKEBEE_UNIVERSAL:-0}" == "1" ]]; then BUILD_ARGS+=(--arch arm64 --arch x86_64); fi
 swift build "${BUILD_ARGS[@]}"
 BUILD_DIR="$(swift build "${BUILD_ARGS[@]}" --show-bin-path)"
-SPARKLE_ROOT="$ROOT_DIR/.build/artifacts/sparkle/Sparkle"
-SPARKLE_FRAMEWORK="$SPARKLE_ROOT/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
-[[ -d "$SPARKLE_FRAMEWORK" ]] || { echo "Sparkle framework is missing" >&2; exit 1; }
-
 if [[ ! -f "$ROOT_DIR/Resources/WakeBee.icns" ||
       "$ROOT_DIR/Resources/WakeBee.png" -nt "$ROOT_DIR/Resources/WakeBee.icns" ||
       "$ROOT_DIR/script/create_icon.swift" -nt "$ROOT_DIR/Resources/WakeBee.icns" ]]; then
@@ -60,34 +56,24 @@ if [[ ! -f "$ROOT_DIR/Resources/WakeBee.icns" ||
 fi
 
 mkdir -p "$APP_CONTENTS/MacOS" "$APP_CONTENTS/Resources" "$APP_CONTENTS/Library/HelperTools" "$APP_CONTENTS/Library/LaunchDaemons"
-mkdir -p "$APP_CONTENTS/Frameworks"
-/usr/bin/ditto "$SPARKLE_FRAMEWORK" "$APP_CONTENTS/Frameworks/Sparkle.framework"
-cp "$SPARKLE_ROOT/LICENSE" "$APP_CONTENTS/Resources/Sparkle-LICENSE.txt"
 cp "$ROOT_DIR/LICENSE" "$APP_CONTENTS/Resources/WakeBee-LICENSE.txt"
 cp "$BUILD_DIR/$APP_NAME" "$APP_BINARY"
 # Retire task-integration executables when updating an earlier bundle in place.
 rm -f "$APP_CONTENTS/MacOS/awakemac-hook" "$APP_CONTENTS/MacOS/awakemac-activity"
 cp "$BUILD_DIR/WakeBeeHelper" "$APP_CONTENTS/Library/HelperTools/WakeBeeHelper"
-cp "$ROOT_DIR/Resources/app.wakebee.helper.plist" "$APP_CONTENTS/Library/LaunchDaemons/"
+cp "$ROOT_DIR/Resources/io.github.dennisimoo.WakeBeeFree.helper.plist" "$APP_CONTENTS/Library/LaunchDaemons/"
+cp "$ROOT_DIR/script/manage-helper.sh" "$ROOT_DIR/script/code_requirement.sh" "$APP_CONTENTS/Resources/"
 cp "$ROOT_DIR/Resources/WakeBee.icns" "$APP_CONTENTS/Resources/"
 chmod +x "$APP_BINARY"
 
 cp "$ROOT_DIR/Resources/Info.plist" "$APP_CONTENTS/Info.plist"
 /usr/bin/plutil -lint "$APP_CONTENTS/Info.plist"
 
-# Sign nested executable code first. The helper rejects ad-hoc signatures at runtime.
-SIGN_OPTIONS=(--force --sign "$SIGN_IDENTITY")
-if [[ "$SIGN_IDENTITY" != "-" ]]; then SIGN_OPTIONS+=(--options runtime --timestamp); fi
-# Sign from the inside out, preserving Sparkle's framework symlinks and the
-# XPC services' existing sandbox entitlements. Never use --deep for signing.
-SPARKLE_VERSION="$APP_CONTENTS/Frameworks/Sparkle.framework/Versions/B"
-for SERVICE in "$SPARKLE_VERSION"/XPCServices/*.xpc; do
-  codesign "${SIGN_OPTIONS[@]}" --preserve-metadata=entitlements "$SERVICE"
-done
-codesign "${SIGN_OPTIONS[@]}" "$SPARKLE_VERSION/Autoupdate"
-codesign "${SIGN_OPTIONS[@]}" "$SPARKLE_VERSION/Updater.app"
-codesign "${SIGN_OPTIONS[@]}" "$APP_CONTENTS/Frameworks/Sparkle.framework"
-codesign "${SIGN_OPTIONS[@]}" --identifier "app.wakebee.helper" "$APP_CONTENTS/Library/HelperTools/WakeBeeHelper"
+# Pin the helper after ad-hoc signing, then seal that requirement in the app.
+SIGN_OPTIONS=(--force --sign "$SIGN_IDENTITY" --options runtime,kill)
+if [[ "$SIGN_IDENTITY" != "-" ]]; then SIGN_OPTIONS+=(--timestamp); fi
+codesign "${SIGN_OPTIONS[@]}" --identifier "io.github.dennisimoo.WakeBeeFree.helper" "$APP_CONTENTS/Library/HelperTools/WakeBeeHelper"
+/bin/bash "$ROOT_DIR/script/code_requirement.sh" "$APP_CONTENTS/Library/HelperTools/WakeBeeHelper" > "$APP_CONTENTS/Resources/helper-requirement.txt"
 codesign "${SIGN_OPTIONS[@]}" --identifier "$BUNDLE_ID" "$APP_BUNDLE"
 codesign --verify --deep --strict "$APP_BUNDLE"
 

@@ -13,17 +13,6 @@ struct SessionPanel: View {
                     SessionStatusMessage(message: model.session.statusMessage,
                                          attentionTrigger: model.blockedStartAttempts)
                 }
-                if !model.license.isUnlocked {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(model.session.isActive
-                             ? "Your current session can finish. Verify your license to start another."
-                             : "Verify your license to start a session.")
-                            .font(.caption).foregroundStyle(.secondary)
-                        Button("Verify license…") { settings(.license) }
-                            .awakeGlassButton()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
 
                 VStack(spacing: 10) {
                     ClosedLidControl(model: model) { settings(.closedLid) }
@@ -53,8 +42,7 @@ struct SessionPanel: View {
                 .help("Quit WakeBee (⌘Q)")
             Menu {
                 Button("Closed-lid settings…", systemImage: "laptopcomputer") { settings(.closedLid) }
-                Button("Check for Updates…", systemImage: "arrow.triangle.2.circlepath", action: model.updates.checkForUpdates)
-                    .disabled(!model.canCheckForUpdates)
+                Link("Updates & source…", destination: URL(string: "https://github.com/dennisimoo/WakeBee-Free/releases")!)
                 Divider()
                 Button("Quit WakeBee.app", systemImage: "power") { model.shutdown(); NSApp.terminate(nil) }
                     .keyboardShortcut("q", modifiers: .command)

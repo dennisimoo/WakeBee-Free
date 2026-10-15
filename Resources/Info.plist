@@ -1,25 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-  <key>CFBundleExecutable</key><string>WakeBee</string>
-  <key>CFBundleIdentifier</key><string>app.wakebee.WakeBee</string>
-  <key>CFBundleName</key><string>WakeBee.app</string>
-  <key>CFBundleDisplayName</key><string>WakeBee.app</string>
-  <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>0.15.4</string>
-  <key>CFBundleVersion</key><string>31</string>
-  <key>CFBundleIconFile</key><string>WakeBee</string>
-  <key>LSMinimumSystemVersion</key><string>14.0</string>
-  <key>LSUIElement</key><true/>
-  <key>NSPrincipalClass</key><string>NSApplication</string>
-  <key>NSHighResolutionCapable</key><true/>
-  <key>SUFeedURL</key><string>https://raw.githubusercontent.com/jswladitya/WakeBee-Releases/main/appcast.xml</string>
-  <key>SUPublicEDKey</key><string>OtIBSdx2ZQGuutfbpCsBS/mTh/JbZn8wzXc7muKYrWw=</string>
-  <key>SUEnableAutomaticChecks</key><true/>
-  <key>SUScheduledCheckInterval</key><integer>86400</integer>
-  <key>SUAutomaticallyUpdate</key><false/>
-  <key>SUAllowsAutomaticUpdates</key><false/>
-  <key>SUEnableSystemProfiling</key><false/>
-  <key>SUVerifyUpdateBeforeExtraction</key><true/>
-  <key>SURequireSignedFeed</key><true/>
-</dict></plist>
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>WakeBee Free</string>
+	<key>CFBundleExecutable</key>
+	<string>WakeBee</string>
+	<key>CFBundleIconFile</key>
+	<string>WakeBee</string>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.dennisimoo.WakeBeeFree</string>
+	<key>CFBundleName</key>
+	<string>WakeBee Free</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.16.0</string>
+	<key>CFBundleVersion</key>
+	<string>32</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+</dict>
+</plist>

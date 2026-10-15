@@ -39,13 +39,7 @@ struct SessionSetupView: View {
                 .buttonBorderShape(.capsule)
                 .controlSize(.regular)
                 .keyboardShortcut(.defaultAction)
-                .disabled(!(model.requestedSession?.isValid(at: context.date) ?? false) || !model.license.isUnlocked || model.updates.isUpdateInProgress)
-            }
-
-            if model.updates.isUpdateInProgress {
-                Text("Finish or dismiss the update to start a session.")
-                    .font(.caption).foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                .disabled(!(model.requestedSession?.isValid(at: context.date) ?? false))
             }
 
         }

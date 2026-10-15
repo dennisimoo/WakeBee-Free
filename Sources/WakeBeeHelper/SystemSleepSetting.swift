@@ -3,7 +3,7 @@ import Darwin
 import Foundation
 
 final class SystemSleepSetting: SleepSettingManaging {
-    private let folder = "/private/var/db/app.wakebee.helper"
+    private let folder = "/private/var/db/io.github.dennisimoo.WakeBeeFree.helper"
     private var file: URL { URL(fileURLWithPath: folder).appendingPathComponent("recovery.json") }
 
     func readDisabled() throws -> Bool {

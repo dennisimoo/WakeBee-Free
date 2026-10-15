@@ -11,17 +11,44 @@ import ServiceManagement
 }
 
 @MainActor final class SystemHelperRegistration: HelperRegistering {
-    private var service: SMAppService { .daemon(plistName: HelperIdentity.plist) }
-    var status: SMAppService.Status { service.status }
-    func register() async throws {
-        // Both launchctl and ServiceManagement may block. Never run them on
-        // the UI executor: users must still be able to dismiss or quit.
+    var status: SMAppService.Status {
+        FileManager.default.fileExists(atPath: HelperIdentity.clientConfiguration) ? .enabled : .notRegistered
+    }
+    func register() async throws { try await authorize("install") }
+    func unregister() async throws { try await authorize("uninstall") }
+
+    private func authorize(_ action: String) async throws {
+        guard let script = Bundle.main.url(forResource: "manage-helper", withExtension: "sh") else {
+            throw HelperRegistration.Failure.missingBundle
+        }
+        let app = Bundle.main.bundleURL.path
+        let uid = getuid()
         try await Task.detached(priority: .userInitiated) {
             try LegacyHelperGuard.ensureReady(checkRecovery: false)
-            try SMAppService.daemon(plistName: HelperIdentity.plist).register()
+            let command = "/bin/bash " + Self.shellQuote(script.path) + " " + action
+                + " " + Self.shellQuote(app) + " " + String(uid)
+            // Pass command text as an AppleScript argument, never interpolate it
+            // into AppleScript source. Shell paths are independently quoted.
+            let process = Process(), pipe = Pipe()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            process.arguments = ["-e", "on run argv", "-e",
+                "do shell script (item 1 of argv) with administrator privileges",
+                "-e", "end run", command]
+            process.standardOutput = FileHandle.nullDevice
+            process.standardError = pipe
+            try process.run()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            guard process.terminationStatus == 0 else {
+                throw NSError(domain: "WakeBeeFree.HelperSetup", code: Int(process.terminationStatus),
+                              userInfo: [NSLocalizedDescriptionKey: String(decoding: data, as: UTF8.self)])
+            }
         }.value
     }
-    func unregister() async throws { try await service.unregister() }
+
+    nonisolated static func shellQuote(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
+    }
 }
 
 /// Re-register changed bundles only after the kernel confirms that sleep is
@@ -118,6 +145,7 @@ import ServiceManagement
         guard let executable = try? Data(contentsOf: helper), let configuration = try? Data(contentsOf: plist) else { return nil }
         var digest = SHA256()
         digest.update(data: executable); digest.update(data: configuration)
+        if let app = bundle.executableURL, let data = try? Data(contentsOf: app) { digest.update(data: data) }
         digest.update(data: Data(bundle.bundleURL.path.utf8))
         digest.update(data: Data((bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "").utf8))
         return digest.finalize().map { String(format: "%02x", $0) }.joined()

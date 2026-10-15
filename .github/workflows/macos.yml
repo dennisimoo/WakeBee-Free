@@ -1,0 +1,43 @@
+name: macOS checks and app
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+      - name: Shell syntax
+        run: bash -n script/build_and_run.sh script/code_requirement.sh script/manage-helper.sh
+      - name: Swift tests
+        run: swift test --disable-sandbox
+      - name: Python and real ad-hoc signature tests
+        run: python3 -m unittest discover -s script -p 'test_*.py'
+      - name: Build free universal app
+        env:
+          WAKEBEE_UNIVERSAL: '1'
+          WAKEBEE_BUILD_CONFIGURATION: release
+          WAKEBEE_SIGN_IDENTITY: '-'
+        run: ./script/build_and_run.sh --build-only
+      - name: Admin helper installation and XPC authentication (no sleep leases)
+        run: python3 script/check_helper_integration.py
+      - name: Package
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent dist/WakeBee.app dist/WakeBee-Free-macOS.zip
+          shasum -a 256 dist/WakeBee-Free-macOS.zip > dist/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WakeBee-Free-macOS
+          path: |
+            dist/WakeBee-Free-macOS.zip
+            dist/SHA256SUMS
+          if-no-files-found: error

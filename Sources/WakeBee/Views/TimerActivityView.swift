@@ -35,7 +35,7 @@ struct TimerActivityView: View {
                         }
                         .awakeGlassButton()
                         .accessibilityLabel("Add 15 minutes")
-                        .disabled(!model.license.isUnlocked || end.timeIntervalSince(current.startedAt) >= Double(SessionDuration.maximumMinutes) * 60)
+                        .disabled(end.timeIntervalSince(current.startedAt) >= Double(SessionDuration.maximumMinutes) * 60)
                     }
                     Button(action: model.end) {
                         Label("End session", systemImage: "stop.fill")

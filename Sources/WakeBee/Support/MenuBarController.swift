@@ -155,9 +155,8 @@ final class MenuBarController: NSObject, NSPopoverDelegate {
             button?.title = ""
             let icon = active ? activeIcon : idleIcon
             if button?.image !== icon { button?.image = icon }
-            let unlocked = model.license.isUnlocked
-            button?.setAccessibilityLabel(active ? "WakeBee.app, session active" : unlocked ? "WakeBee.app, inactive" : "WakeBee.app, activation required")
-            button?.toolTip = active ? "WakeBee.app — keeping your Mac awake" : unlocked ? "WakeBee.app — start a session" : "WakeBee.app — activate your license"
+            button?.setAccessibilityLabel(active ? "WakeBee Free, session active" : "WakeBee Free, inactive")
+            button?.toolTip = active ? "WakeBee Free — keeping your Mac awake" : "WakeBee Free — start a session"
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in self?.observeStatus() }
         }

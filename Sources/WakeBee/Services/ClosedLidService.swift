@@ -31,7 +31,7 @@ final class ClosedLidService {
     @ObservationIgnored private let healthCheck: (() async -> (Bool, String, Bool))?
     @ObservationIgnored private var healthReply: ((Bool, String, Bool) -> Void)?
 
-    init(registration: HelperRegistration = HelperRegistration(), signedBuild: Bool = HelperIdentity.teamID != nil,
+    init(registration: HelperRegistration = HelperRegistration(), signedBuild: Bool = HelperIdentity.helperRequirement != nil,
          healthCheck: (() async -> (Bool, String, Bool))? = nil) {
         self.registration = registration
         self.healthCheck = healthCheck
@@ -282,10 +282,10 @@ final class ClosedLidService {
     }
 
     private func connect() -> (any WakeBeeHelperProtocol)? {
-        guard let team = HelperIdentity.teamID else { return nil }
+        guard let requirement = HelperIdentity.helperRequirement else { return nil }
         if connection == nil {
             let connection = NSXPCConnection(machServiceName: HelperIdentity.service, options: .privileged)
-            connection.setCodeSigningRequirement(HelperIdentity.requirement(identifier: HelperIdentity.service, team: team))
+            connection.setCodeSigningRequirement(requirement)
             connection.remoteObjectInterface = NSXPCInterface(with: WakeBeeHelperProtocol.self)
             let generation = requestGeneration
             connection.invalidationHandler = { [weak self] in

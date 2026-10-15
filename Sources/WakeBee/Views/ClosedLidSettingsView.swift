@@ -70,7 +70,7 @@ struct ClosedLidSettingsView: View {
             Text(setupDescription).font(.callout).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if !model.closedLid.signedBuild {
-                Text("Use the signed version of WakeBee to set up this feature.")
+                Text("Rebuild WakeBee Free to restore its helper signature information.")
                     .font(.caption).foregroundStyle(.secondary)
             } else if model.closedLid.isBusy {
                 ProgressView().controlSize(.small)
@@ -79,7 +79,6 @@ struct ClosedLidSettingsView: View {
                 Button(action == .setUp && model.closedLid.issueMessage != nil ? "Try setup again" : action.title,
                        action: model.setupClosedLid)
                     .awakeGlassButton(prominent: true).buttonBorderShape(.capsule)
-                    .disabled(!model.license.isUnlocked)
             }
         }
     }
@@ -88,6 +87,6 @@ struct ClosedLidSettingsView: View {
         if model.closedLid.isBusy { return "Keep the lid open while WakeBee finishes setup." }
         if model.closedLid.needsApproval { return "Allow WakeBee under Login Items & Extensions, then return here." }
         if model.closedLid.issueMessage != nil { return "Closed-lid mode isn’t ready yet. Keep the lid open. The setup details below can help us find out why." }
-        return "Set up once. If macOS asks, allow WakeBee to run in the background. Closed-lid mode will turn on when you return; then start a session."
+        return "Set up once with your Mac administrator password. This installs the recovery helper; no purchase or Apple developer account is needed. Then start a session."
     }
 }

@@ -14,7 +14,6 @@ public final class SessionController {
     public private(set) var keepDisplayAwake: Bool
     public private(set) var lastEndReason: SessionEndReason?
     public var errorMessage: String?
-    public private(set) var allowsNewSessions = true
 
     @ObservationIgnored private let power: any PowerManaging
     @ObservationIgnored private let schedulesTimers: Bool
@@ -36,12 +35,6 @@ public final class SessionController {
         return reason.description
     }
 
-    /// Finite sessions may finish; until-stopped sessions end when verification lapses.
-    public func setLicenseAccess(_ allowed: Bool) {
-        allowsNewSessions = allowed
-        if !allowed, let current = session, current.endsAt == nil { end(reason: .licenseExpired) }
-    }
-
     public func updatePowerSafety(policy: SessionPowerPolicy, state: ClosedLidPowerState) {
         powerPolicy = policy
         powerState = state
@@ -50,10 +43,6 @@ public final class SessionController {
 
     @discardableResult
     public func start(_ duration: SessionDuration, at date: Date = .now) -> Bool {
-        guard allowsNewSessions else {
-            errorMessage = "Activate your WakeBee license to start a new session."
-            return false
-        }
         guard duration.isValid(at: date) else {
             errorMessage = "Choose 1 minute to 24 hours, or an end time within the next 24 hours."
             return false
@@ -109,7 +98,6 @@ public final class SessionController {
     }
 
     public func extend(by minutes: Int = 15, at date: Date = .now) {
-        guard allowsNewSessions else { return }
         refresh(at: date)
         guard minutes > 0, minutes <= SessionDuration.maximumMinutes,
               let current = session, let end = current.endsAt else { return }

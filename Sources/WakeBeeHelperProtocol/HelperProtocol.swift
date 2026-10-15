@@ -12,21 +12,14 @@ import Security
 }
 
 public enum HelperIdentity {
-    public static let service = "app.wakebee.helper"
-    public static let plist = "app.wakebee.helper.plist"
-    public static var teamID: String? {
-        var code: SecCode?
-        guard SecCodeCopySelf([], &code) == errSecSuccess, let code else { return nil }
-        var staticCode: SecStaticCode?
-        guard SecCodeCopyStaticCode(code, [], &staticCode) == errSecSuccess, let staticCode else { return nil }
-        var details: CFDictionary?
-        guard SecCodeCopySigningInformation(staticCode, SecCSFlags(rawValue: kSecCSSigningInformation), &details) == errSecSuccess,
-              let values = details as? [String: Any],
-              let team = values[kSecCodeInfoTeamIdentifier as String] as? String,
-              team.range(of: "^[A-Z0-9]{10}$", options: .regularExpression) != nil else { return nil }
-        return team
-    }
-    public static func requirement(identifier: String, team: String) -> String {
-        "anchor apple generic and identifier \"\(identifier)\" and certificate leaf[subject.OU] = \"\(team)\""
+    public static let service = "io.github.dennisimoo.WakeBeeFree.helper"
+    public static let plist = "io.github.dennisimoo.WakeBeeFree.helper.plist"
+    public static let directory = "/Library/PrivilegedHelperTools/io.github.dennisimoo.WakeBeeFree"
+    public static let clientConfiguration = directory + "/client.plist"
+    public static var helperRequirement: String? {
+        guard let url = Bundle.main.url(forResource: "helper-requirement", withExtension: "txt"),
+              let value = try? String(contentsOf: url, encoding: .utf8),
+              !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return value.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

@@ -67,19 +67,6 @@ struct SessionControllerTests {
         #expect(controller.lastEndReason == .stopped)
     }
 
-    @Test func licenseLossKeepsExistingDeadlineButRejectsNewSessionsAndExtensions() {
-        let power = FakePower()
-        let controller = SessionController(power: power, schedulesTimers: false)
-        controller.start(.minutes(1), at: origin)
-        controller.setLicenseAccess(false)
-        #expect(!controller.start(.minutes(30), at: origin))
-        controller.extend(at: origin)
-        #expect(power.active)
-        #expect(controller.session?.endsAt == origin.addingTimeInterval(60))
-        controller.refresh(at: origin.addingTimeInterval(60))
-        #expect(!power.active)
-    }
-
     @Test func displayToggleUpdatesAssertionsWithoutRestartingTimer() {
         let power = FakePower()
         let controller = SessionController(power: power, schedulesTimers: false)
@@ -196,15 +183,15 @@ struct SessionControllerTests {
         #expect(!power.active && controller.lastEndReason == .stopped)
     }
 
-    @Test func untilStoppedRespectsExplicitSleepAndLicenseLoss() {
+    @Test func untilStoppedRespectsExplicitSleep() {
         let power = FakePower()
         let controller = SessionController(power: power, schedulesTimers: false)
         controller.start(.indefinitely, at: origin)
         controller.end(reason: .systemSleep)
         #expect(!power.active)
-        controller.start(.indefinitely, at: origin)
-        controller.setLicenseAccess(false)
-        #expect(!power.active && controller.lastEndReason == .licenseExpired)
+        #expect(controller.lastEndReason == .systemSleep)
+        #expect(controller.start(.indefinitely, at: origin))
+        #expect(power.active)
     }
 
     @Test func batteryCutoffEndsTheEntireSessionAndDoesNotResume() {
