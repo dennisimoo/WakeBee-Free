@@ -1,7 +1,7 @@
 name: macOS checks and app
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -33,7 +33,10 @@ jobs:
       - name: Package
         run: |
           ditto -c -k --sequesterRsrc --keepParent dist/WakeBee.app dist/WakeBee-Free-macOS.zip
-          shasum -a 256 dist/WakeBee-Free-macOS.zip > dist/SHA256SUMS
+          (
+            cd dist
+            shasum -a 256 WakeBee-Free-macOS.zip > SHA256SUMS
+          )
       - uses: actions/upload-artifact@v4
         with:
           name: WakeBee-Free-macOS

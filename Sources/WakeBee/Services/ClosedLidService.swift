@@ -19,7 +19,7 @@ final class ClosedLidService {
     private(set) var canRepair = false
     let signedBuild: Bool
     @ObservationIgnored private let registration: HelperRegistration
-    @ObservationIgnored private let log = Logger(subsystem: "app.wakebee.WakeBee", category: "Helper")
+    @ObservationIgnored private let log = Logger(subsystem: "io.github.dennisimoo.WakeBeeFree", category: "Helper")
     @ObservationIgnored private var connection: NSXPCConnection?
     @ObservationIgnored private var lastRenewal = Date.distantPast
     @ObservationIgnored private var activeUntil = Date.distantPast

@@ -7,7 +7,7 @@ struct GeneralSettingsView: View {
         @Bindable var preferences = model.preferences
         SettingsScrollPage {
             SettingsGlassSection(title: "Startup", detail: "WakeBee opens in the menu bar. Sessions start when you choose.") {
-                Toggle("Launch at login", isOn: Binding(get: { model.loginItem.isRegistered }, set: model.loginItem.setEnabled))
+                Toggle("Launch at login", isOn: Binding(get: { model.loginItem.isRegistered }, set: { model.loginItem.setEnabled($0) }))
                 if model.loginItem.needsApproval {
                     Button("Allow in System Settings…") { model.loginItem.openSystemSettings() }
                         .awakeGlassButton()
@@ -21,7 +21,7 @@ struct GeneralSettingsView: View {
                 Toggle("Remember last duration", isOn: $preferences.rememberDuration)
                 Divider()
                 Toggle("Keep display awake", isOn: Binding(
-                    get: { model.session.keepDisplayAwake }, set: model.setDisplayAwake))
+                    get: { model.session.keepDisplayAwake }, set: { model.setDisplayAwake($0) }))
                     .help("Keeps the display awake during an active session.")
             }
             SessionPowerSettings(preferences: preferences, closedLidEnabled: model.closedLid.isEnabled || model.closedLid.isBusy)

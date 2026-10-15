@@ -31,7 +31,7 @@ struct ClosedLidControl: View {
                     .disabled(model.closedLid.isBusy)
                 } else if model.closedLid.isRegistered {
                     Toggle("Keep awake with lid closed", isOn: Binding(
-                        get: { model.closedLid.isEnabled }, set: model.setClosedLid))
+                        get: { model.closedLid.isEnabled }, set: { model.setClosedLid($0) }))
                         .toggleStyle(AwakeGlassToggleStyle(showsLabel: false))
                         .disabled(model.closedLid.isBusy)
                 }
