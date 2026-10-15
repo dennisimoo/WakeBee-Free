@@ -29,7 +29,7 @@ The identifiers are independent of the original app:
 
 `code_requirement.sh` extracts the CodeDirectory hash of every architecture. The bundle script signs the helper first and seals its hash requirement inside the app. XPC clients reject helper code that does not satisfy that requirement.
 
-Setup invokes `manage-helper.sh` through macOS's administrator-authorization dialog. Paths are shell-quoted, and the complete command is an AppleScript argument rather than interpolated AppleScript source. The installer verifies a root-owned staged copy of the bundle, computes the app's exact hash requirement, installs a root-owned helper and configuration, and bootstraps launchd. No persistent sudo grant is installed.
+Setup invokes `manage-helper.sh` through macOS's administrator-authorization dialog. Paths are shell-quoted, and the complete command is an AppleScript argument rather than interpolated AppleScript source. The app first stages a root-owned copy, rejects symlinks, and verifies it against the executing app’s exact hash before running its installer script. The installer verifies that copy again, computes the app's exact hash requirement, installs a root-owned helper and configuration, and bootstraps launchd. No persistent sudo grant is installed.
 
 The helper accepts only the configured non-root UID and exact approved app hashes using `NSXPCConnection.setCodeSigningRequirement`. There is no identifier-only or unsigned-client fallback. Root-owned configuration pins the approved build; rebuilding or updating the app needs renewed approval. The service exposes only existing bounded health, renew, and release operations, never arbitrary commands.
 

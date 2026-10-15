@@ -51,7 +51,7 @@ if [[ "$ACTION" == install ]]; then
     [[ ! -L "$CONTENTS/Library/HelperTools/WakeBeeHelper" ]] || exit 77
     REQUIREMENT=$(/bin/bash "$CONTENTS/Resources/code_requirement.sh" "$CONTENTS/MacOS/WakeBee")
     # Verify the bundled peer requirement matches the actual helper.
-    codesign --verify --strict -R "$(cat "$CONTENTS/Resources/helper-requirement.txt")" "$CONTENTS/Library/HelperTools/WakeBeeHelper"
+    codesign --verify --strict -R "=$(cat "$CONTENTS/Resources/helper-requirement.txt")" "$CONTENTS/Library/HelperTools/WakeBeeHelper"
 fi
 
 if [[ -d "$INSTALL_DIR" ]]; then

@@ -18,15 +18,32 @@ import ServiceManagement
     func unregister() async throws { try await authorize("uninstall") }
 
     private func authorize(_ action: String) async throws {
-        guard let script = Bundle.main.url(forResource: "manage-helper", withExtension: "sh") else {
+        guard Bundle.main.url(forResource: "manage-helper", withExtension: "sh") != nil else {
             throw HelperRegistration.Failure.missingBundle
         }
+        guard let requirement = HelperIdentity.currentCodeRequirement else { throw HelperRegistration.Failure.invalidSignature }
         let app = Bundle.main.bundleURL.path
         let uid = getuid()
+        #if arch(arm64)
+        let architecture = "arm64"
+        #else
+        let architecture = "x86_64"
+        #endif
         try await Task.detached(priority: .userInitiated) {
             try LegacyHelperGuard.ensureReady(checkRecovery: false)
-            let command = "/bin/bash " + Self.shellQuote(script.path) + " " + action
-                + " " + Self.shellQuote(app) + " " + String(uid)
+            // Execute only a verified, root-staged copy of the installer. A
+            // mutable resource in a user's app bundle must never run as root.
+            let command = """
+            set -eu
+            umask 077
+            stage=$(/usr/bin/mktemp -d /private/tmp/wakebee-free.XXXXXX)
+            trap '/bin/rm -rf "$stage"' EXIT
+            /usr/bin/ditto \(Self.shellQuote(app)) "$stage/App.app"
+            /usr/sbin/chown -R root:wheel "$stage"
+            test -z "$(/usr/bin/find "$stage/App.app" -type l -print -quit)"
+            /usr/bin/codesign --verify --deep --strict --arch \(architecture) -R \(Self.shellQuote("=" + requirement)) "$stage/App.app"
+            /bin/bash "$stage/App.app/Contents/Resources/manage-helper.sh" \(action) "$stage/App.app" \(uid)
+            """
             // Pass command text as an AppleScript argument, never interpolate it
             // into AppleScript source. Shell paths are independently quoted.
             let process = Process(), pipe = Pipe()
@@ -152,9 +169,10 @@ import ServiceManagement
     }
 
     enum Failure: LocalizedError {
-        case missingBundle, restorationPending
+        case missingBundle, restorationPending, invalidSignature
         var errorDescription: String? {
             switch self {
+            case .invalidSignature: "The app signature could not be verified. Rebuild or reinstall WakeBee Free."
             case .missingBundle: "The helper is missing from this app. Reinstall WakeBee to repair it."
             case .restorationPending: "Waiting for normal sleep settings to return. Keep the lid open, then try again."
             }
